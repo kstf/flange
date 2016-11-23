@@ -25,7 +25,9 @@ var mime = _interopRequireWildcard(_mime);
 
 var _bluebird = require('bluebird');
 
-var Bluebird = _interopRequireWildcard(_bluebird);
+var _bluebird2 = _interopRequireDefault(_bluebird);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -69,7 +71,7 @@ var Receiver = exports.Receiver = function () {
       if (!info) {
         throw new Error('Bad Token');
       } else {
-        return Bluebird.resolve().then(function () {
+        return _bluebird2.default.resolve().then(function () {
           if (info.chunkStates[chunkInfo.flowChunkNumber - 1] === 'unseen') {
             info.chunkStates[chunkInfo.flowChunkNumber - 1] = 'saving';
             return _this.saveChunk(chunkInfo, chunkBuffer);
@@ -95,7 +97,7 @@ var Receiver = exports.Receiver = function () {
       var _this2 = this;
 
       var info = this.statusTracker[chunkInfo.flowIdentifier];
-      return new Bluebird(function (resolve, reject) {
+      return new _bluebird2.default(function (resolve, reject) {
         var chunkFileName = info.tokenKey + '.' + chunkInfo.flowChunkNumber;
         var outStream = fs.createWriteStream(path.resolve(_this2.options.tmpDir, chunkFileName));
         outStream.on('finish', resolve);
@@ -134,7 +136,7 @@ var Receiver = exports.Receiver = function () {
       var outFile = fs.createWriteStream(path.resolve(this.options.tmpDir, info.targetFilename), { autoClose: false });
       return info.chunkStates.reduce(function (thenable, chunkFile) {
         return thenable.then(function () {
-          return new Bluebird(function (resolve, reject) {
+          return new _bluebird2.default(function (resolve, reject) {
             var chunkStream = fs.createReadStream(path.resolve(_this3.options.tmpDir, chunkFile));
             chunkStream.on('end', resolve);
             chunkStream.on('error', reject);
@@ -143,7 +145,7 @@ var Receiver = exports.Receiver = function () {
             return fs.unlinkSync(_this3.options.tmpDir, outFile);
           });
         });
-      }, Bluebird.resolve()).then(function () {
+      }, _bluebird2.default.resolve()).then(function () {
         outFile.closeSync();
         if (_this3.options.onComplete) {
           return _this3.options.onComplete(info.targetFilename).then(function () {
