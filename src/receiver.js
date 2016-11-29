@@ -89,8 +89,7 @@ export class Receiver {
 
   concatAndFinalize(info) {
     const outFile = fs.createWriteStream(
-      path.resolve(this.options.tmpDir, info.targetFilename),
-      {autoClose: false}
+      path.resolve(this.options.tmpDir, info.targetFilename)
     );
     return info.chunkStates.reduce((thenable, chunkFile) => {
       return thenable.then(() => {
@@ -100,12 +99,12 @@ export class Receiver {
           chunkStream.on('error', reject);
           chunkStream.pipe(outFile, {end: false});
         }).then(() => {
-          return fs.unlinkSync(this.options.tmpDir, outFile);
+          return fs.unlinkSync(path.join(this.options.tmpDir, chunkFile));
         });
       });
     }, Bluebird.resolve())
     .then(() => {
-      fs.closeSync(outFile);
+      outFile.end();
       if (this.options.onComplete) {
         return this.options.onComplete(info.targetFilename)
         .then(() => info.targetFilename);
@@ -114,7 +113,7 @@ export class Receiver {
       }
     })
     .catch((err) => {
-      fs.closeSync(outFile);
+      outFile.end();
       throw err;
     });
   }

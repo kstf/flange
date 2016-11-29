@@ -1,5 +1,8 @@
 'use strict';
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }(); /* eslint-env node, mocha*/
+/* eslint no-shadow: 0 */
+
 var _chai = require('chai');
 
 var _chai2 = _interopRequireDefault(_chai);
@@ -14,9 +17,9 @@ var _streamToPromise = require('stream-to-promise');
 
 var _streamToPromise2 = _interopRequireDefault(_streamToPromise);
 
-var _stream = require('stream');
+var _bluebird = require('bluebird');
 
-var stream = _interopRequireWildcard(_stream);
+var _bluebird2 = _interopRequireDefault(_bluebird);
 
 var _os = require('os');
 
@@ -42,9 +45,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-_chai2.default.use(_chaiAsPromised2.default); /* eslint-env node, mocha*/
-/* eslint no-shadow: 0 */
-
+_chai2.default.use(_chaiAsPromised2.default);
 var expect = _chai2.default.expect;
 
 var testServer = new Hapi.Server();
@@ -130,7 +131,65 @@ describe('hapiPlugin', function () {
         return expect(outFile.toString()).to.equal(testFile.toString());
       });
     });
-    it('finalizes and returns 200 on the last chunk');
+    it('finalizes and returns 200 on the last chunk', function () {
+      testFlange.attributes.receiver.initiateUpload({
+        flowChunkSize: testFile.length,
+        flowTotalSize: testFile.length * 2,
+        flowIdentifier: 'testPost2.txt',
+        flowFilename: 'testPost2.txt',
+        flowCurrentChunkSize: testFile.length,
+        flowTotalChunks: 2,
+        flowRelativePath: '/tmp'
+      });
+      var postRequest1 = new _formData2.default();
+      postRequest1.append('flowChunkNumber', 1);
+      postRequest1.append('flowChunkSize', testFile.length);
+      postRequest1.append('flowTotalSize', testFile.length * 2);
+      postRequest1.append('flowIdentifier', 'testPost2.txt');
+      postRequest1.append('flowFilename', 'testPost2.txt');
+      postRequest1.append('flowCurrentChunkSize', testFile.length);
+      postRequest1.append('flowTotalChunks', 2);
+      postRequest1.append('flowRelativePath', '/tmp');
+      var fileStream1 = fs.createReadStream(path.join(__dirname, 'hapi.test.js'));
+      postRequest1.append('file', fileStream1);
+      var postRequest2 = new _formData2.default();
+      postRequest2.append('flowChunkNumber', 2);
+      postRequest2.append('flowChunkSize', testFile.length);
+      postRequest2.append('flowTotalSize', testFile.length * 2);
+      postRequest2.append('flowIdentifier', 'testPost2.txt');
+      postRequest2.append('flowFilename', 'testPost2.txt');
+      postRequest2.append('flowCurrentChunkSize', testFile.length);
+      postRequest2.append('flowTotalChunks', 2);
+      postRequest2.append('flowRelativePath', '/tmp');
+      var fileStream2 = fs.createReadStream(path.join(__dirname, 'hapi.test.js'));
+      postRequest2.append('file', fileStream2);
+      _bluebird2.default.all([(0, _streamToPromise2.default)(postRequest1), (0, _streamToPromise2.default)(postRequest2)]).then(function (_ref) {
+        var _ref2 = _slicedToArray(_ref, 2),
+            p1 = _ref2[0],
+            p2 = _ref2[1];
+
+        return _bluebird2.default.all([testServer.inject({
+          url: '/flange/upload',
+          method: 'POST',
+          headers: postRequest1.getHeaders(),
+          payload: p1
+        }), testServer.inject({
+          url: '/flange/upload',
+          method: 'POST',
+          headers: postRequest2.getHeaders(),
+          payload: p2
+        })]);
+      }).then(function (_ref3) {
+        var _ref4 = _slicedToArray(_ref3, 2),
+            r1 = _ref4[0],
+            r2 = _ref4[1];
+
+        return [expect(r1).to.have.deep.property('statusCode', 200), expect(r2).to.have.deep.property('statusCode', 200)];
+      }).then(function () {
+        var outFile = fs.readFileSync(path.join(os.tmpdir(), testFlange.attributes.receiver.statusTracker['testPost2.txt'].targetFilename));
+        return expect(outFile.toString()).to.equal(testFile.toString() + testFile.toString());
+      });
+    });
     it('generates appopriate errors on invalid requests');
   });
 });

@@ -133,7 +133,9 @@ var Receiver = exports.Receiver = function () {
     value: function concatAndFinalize(info) {
       var _this3 = this;
 
-      var outFile = fs.createWriteStream(path.resolve(this.options.tmpDir, info.targetFilename), { autoClose: false });
+      var outFile = fs.createWriteStream(path.resolve(this.options.tmpDir, info.targetFilename)
+      // {autoClose: false}
+      );
       return info.chunkStates.reduce(function (thenable, chunkFile) {
         return thenable.then(function () {
           return new _bluebird2.default(function (resolve, reject) {
@@ -142,11 +144,11 @@ var Receiver = exports.Receiver = function () {
             chunkStream.on('error', reject);
             chunkStream.pipe(outFile, { end: false });
           }).then(function () {
-            return fs.unlinkSync(_this3.options.tmpDir, outFile);
+            return fs.unlinkSync(path.join(_this3.options.tmpDir, chunkFile));
           });
         });
       }, _bluebird2.default.resolve()).then(function () {
-        fs.closeSync(outFile);
+        outFile.end();
         if (_this3.options.onComplete) {
           return _this3.options.onComplete(info.targetFilename).then(function () {
             return info.targetFilename;
@@ -155,7 +157,7 @@ var Receiver = exports.Receiver = function () {
           return info.targetFilename;
         }
       }).catch(function (err) {
-        fs.closeSync(outFile);
+        outFile.end();
         throw err;
       });
     }

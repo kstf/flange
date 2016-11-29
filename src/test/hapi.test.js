@@ -5,7 +5,7 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { hapiPlugin } from '../hapi';
 import streamToPromise from 'stream-to-promise';
-import * as stream from 'stream';
+import Bluebird from 'bluebird';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -110,7 +110,69 @@ describe('hapiPlugin', () => {
         return expect(outFile.toString()).to.equal(testFile.toString());
       });
     });
-    it('finalizes and returns 200 on the last chunk');
+    it('finalizes and returns 200 on the last chunk', () => {
+      testFlange.attributes.receiver.initiateUpload({
+        flowChunkSize: testFile.length,
+        flowTotalSize: testFile.length * 2,
+        flowIdentifier: 'testPost2.txt',
+        flowFilename: 'testPost2.txt',
+        flowCurrentChunkSize: testFile.length,
+        flowTotalChunks: 2,
+        flowRelativePath: '/tmp',
+      });
+      const postRequest1 = new FormData();
+      postRequest1.append('flowChunkNumber', 1);
+      postRequest1.append('flowChunkSize', testFile.length);
+      postRequest1.append('flowTotalSize', testFile.length * 2);
+      postRequest1.append('flowIdentifier', 'testPost2.txt');
+      postRequest1.append('flowFilename', 'testPost2.txt');
+      postRequest1.append('flowCurrentChunkSize', testFile.length);
+      postRequest1.append('flowTotalChunks', 2);
+      postRequest1.append('flowRelativePath', '/tmp');
+      const fileStream1 = fs.createReadStream(path.join(__dirname, 'hapi.test.js'));
+      postRequest1.append('file', fileStream1);
+      const postRequest2 = new FormData();
+      postRequest2.append('flowChunkNumber', 2);
+      postRequest2.append('flowChunkSize', testFile.length);
+      postRequest2.append('flowTotalSize', testFile.length * 2);
+      postRequest2.append('flowIdentifier', 'testPost2.txt');
+      postRequest2.append('flowFilename', 'testPost2.txt');
+      postRequest2.append('flowCurrentChunkSize', testFile.length);
+      postRequest2.append('flowTotalChunks', 2);
+      postRequest2.append('flowRelativePath', '/tmp');
+      const fileStream2 = fs.createReadStream(path.join(__dirname, 'hapi.test.js'));
+      postRequest2.append('file', fileStream2);
+      Bluebird.all([streamToPromise(postRequest1), streamToPromise(postRequest2)])
+      .then(([p1, p2]) => {
+        return Bluebird.all([
+          testServer.inject({
+            url: '/flange/upload',
+            method: 'POST',
+            headers: postRequest1.getHeaders(),
+            payload: p1,
+          }),
+          testServer.inject({
+            url: '/flange/upload',
+            method: 'POST',
+            headers: postRequest2.getHeaders(),
+            payload: p2,
+          }),
+        ]);
+      })
+      .then(([r1, r2]) => {
+        return [
+          expect(r1).to.have.deep.property('statusCode', 200),
+          expect(r2).to.have.deep.property('statusCode', 200),
+        ];
+      })
+      .then(() => {
+        const outFile = fs.readFileSync(path.join(
+          os.tmpdir(),
+          testFlange.attributes.receiver.statusTracker['testPost2.txt'].targetFilename)
+        );
+        return expect(outFile.toString()).to.equal(testFile.toString() + testFile.toString());
+      });
+    });
     it('generates appopriate errors on invalid requests');
   });
 });
