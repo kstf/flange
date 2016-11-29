@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 import * as path from 'path';
-import * as mime from 'mime';
+import mime from 'mime';
 import Bluebird from 'bluebird';
 
 // import { handleError } from './handleError';

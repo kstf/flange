@@ -21,7 +21,7 @@ var path = _interopRequireWildcard(_path);
 
 var _mime = require('mime');
 
-var mime = _interopRequireWildcard(_mime);
+var _mime2 = _interopRequireDefault(_mime);
 
 var _bluebird = require('bluebird');
 
@@ -124,8 +124,8 @@ var Receiver = exports.Receiver = function () {
       for (var i = 0; i < fileInfo.flowTotalChunks; i = i + 1) {
         fileInfo.chunkStates.push('unseen');
       }
-      fileInfo.mimeType = mime.lookup(fileInfo.flowFilename);
-      fileInfo.targetFilename = tokenKey + '.' + mime.extension(fileInfo.mimeType);
+      fileInfo.mimeType = _mime2.default.lookup(fileInfo.flowFilename);
+      fileInfo.targetFilename = tokenKey + '.' + _mime2.default.extension(fileInfo.mimeType);
       this.statusTracker[fileInfo.flowIdentifier] = fileInfo;
     }
   }, {

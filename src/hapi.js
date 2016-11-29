@@ -1,11 +1,10 @@
 import * as Joi from 'joi';
 import { Receiver } from './receiver';
-import * as deepAssign from 'deepAssign';
+import deepAssign from 'deep-assign';
 
 export function hapiPlugin(options) {
-  return function plugin(server, _, next) {
-    const receiver = new Receiver(options);
-
+  const receiver = new Receiver(options);
+  function plugin(server, _, next) {
     const baseGet = deepAssign(
       {},
       {
@@ -68,5 +67,12 @@ export function hapiPlugin(options) {
 
     server.route([baseGet, basePost]);
     next();
+  }
+  plugin.attributes = {
+    version: '1.0.0',
+    name: 'flange',
+    receiver: receiver,
   };
+
+  return plugin;
 }
