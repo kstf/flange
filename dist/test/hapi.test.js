@@ -31,14 +31,13 @@ _chai2.default.use(_chaiAsPromised2.default); /* eslint-env node, mocha*/
 
 var expect = _chai2.default.expect;
 
-var aHapi = _bluebird2.default.promisifyAll(Hapi);
-var testServer = new aHapi.Server();
+var testServer = new Hapi.Server();
 
 var testFlange = (0, _hapi.hapiPlugin)({ tmpDir: os.tmpdir() });
 
 before(function () {
   testServer.connection({ port: 3000 });
-  return testServer.registerAsync(testFlange, {
+  return testServer.register(testFlange, {
     routes: {
       prefix: '/flange'
     }
@@ -62,14 +61,10 @@ describe('hapiPlugin', function () {
         flowRelativePath: '/tmp'
       });
       testFlange.attributes.receiver.statusTracker['test200.txt'].chunkStates[0] = 'test200.txt.1';
-      return testServer.injectAsync('/flange/upload?flowIdentifier=test200.txt&flowChunkNumber=1').catch(function (err) {
-        return err;
-      }).then(function (response) {
-        expect(response).to.have.deep.property('statusCode', 200);
-      });
+      return expect(testServer.inject('/flange/upload?flowIdentifier=test200.txt&flowChunkNumber=1')).to.eventually.have.deep.property('statusCode', 200);
     });
     it('returns 404 on invalid chunks', function () {
-      return expect(testServer.injectAsync('/flange/upload?flowIdentifier=foo')).to.eventually.be.rejectedWith().deep.property('statusCode', 404);
+      return expect(testServer.inject('/flange/upload?flowIdentifier=foo')).to.eventually.have.deep.property('statusCode', 404);
     });
     it('returns 204 on missing chunk', function () {
       testFlange.attributes.receiver.initiateUpload({
@@ -81,11 +76,7 @@ describe('hapiPlugin', function () {
         flowTotalChunks: 10,
         flowRelativePath: '/tmp'
       });
-      return testServer.injectAsync('/flange/upload?flowIdentifier=test204.txt&flowChunkNumber=1').catch(function (err) {
-        return err;
-      }).then(function (response) {
-        expect(response).to.have.deep.property('statusCode', 204);
-      });
+      return expect(testServer.inject('/flange/upload?flowIdentifier=test204.txt&flowChunkNumber=1')).to.eventually.have.deep.property('statusCode', 204);
     });
   });
   describe('POST requests', function () {

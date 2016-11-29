@@ -10,8 +10,7 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 import * as Hapi from 'hapi';
-const aHapi = Bluebird.promisifyAll(Hapi);
-const testServer = new aHapi.Server();
+const testServer = new Hapi.Server();
 
 
 const testFlange = hapiPlugin({tmpDir: os.tmpdir()});
@@ -19,7 +18,7 @@ const testFlange = hapiPlugin({tmpDir: os.tmpdir()});
 
 before(() => {
   testServer.connection({port: 3000});
-  return testServer.registerAsync(
+  return testServer.register(
     testFlange,
     {
       routes: {
@@ -46,15 +45,12 @@ describe('hapiPlugin', () => {
         flowRelativePath: '/tmp',
       });
       testFlange.attributes.receiver.statusTracker['test200.txt'].chunkStates[0] = 'test200.txt.1';
-      return testServer.injectAsync('/flange/upload?flowIdentifier=test200.txt&flowChunkNumber=1')
-      .catch((err) => err)
-      .then((response) => {
-        expect(response).to.have.deep.property('statusCode', 200);
-      });
+      return expect(testServer.inject('/flange/upload?flowIdentifier=test200.txt&flowChunkNumber=1'))
+      .to.eventually.have.deep.property('statusCode', 200);
     });
     it('returns 404 on invalid chunks', () => {
-      return expect(testServer.injectAsync('/flange/upload?flowIdentifier=foo'))
-      .to.eventually.be.rejectedWith().deep.property('statusCode', 404);
+      return expect(testServer.inject('/flange/upload?flowIdentifier=foo'))
+      .to.eventually.have.deep.property('statusCode', 404);
     });
     it('returns 204 on missing chunk', () => {
       testFlange.attributes.receiver.initiateUpload({
@@ -66,11 +62,8 @@ describe('hapiPlugin', () => {
         flowTotalChunks: 10,
         flowRelativePath: '/tmp',
       });
-      return testServer.injectAsync('/flange/upload?flowIdentifier=test204.txt&flowChunkNumber=1')
-      .catch((err) => err)
-      .then((response) => {
-        expect(response).to.have.deep.property('statusCode', 204);
-      });
+      return expect(testServer.inject('/flange/upload?flowIdentifier=test204.txt&flowChunkNumber=1'))
+      .to.eventually.have.deep.property('statusCode', 204);
     });
   });
   describe('POST requests', () => {
