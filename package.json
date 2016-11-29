@@ -1,6 +1,6 @@
 {
   "name": "flange",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A node.js server plugin for receiving flow.js uploads",
   "main": "dist/index.js",
   "scripts": {
@@ -30,13 +30,18 @@
     "chai-as-promised": "^6.0.0",
     "del": "^2.2.2",
     "eslint": "^3.10.2",
+    "form-data": "^2.1.2",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
-    "gulp-mocha": "^3.0.1"
+    "gulp-mocha": "^3.0.1",
+    "rimraf": "^2.5.4",
+    "stream-to-promise": "^2.2.0"
   },
   "dependencies": {
     "bluebird": "^3.4.6",
     "deep-assign": "^2.0.0",
+    "hapi": "^15.2.0",
+    "joi": "^10.0.1",
     "mime": "^1.3.4"
   }
 }

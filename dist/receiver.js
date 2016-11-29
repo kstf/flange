@@ -21,7 +21,7 @@ var path = _interopRequireWildcard(_path);
 
 var _mime = require('mime');
 
-var mime = _interopRequireWildcard(_mime);
+var _mime2 = _interopRequireDefault(_mime);
 
 var _bluebird = require('bluebird');
 
@@ -44,7 +44,7 @@ var Receiver = exports.Receiver = function () {
     this.options = Object.assign({}, opts);
     this.statusTracker = {};
     if (!fs.existsSync(this.options.tmpDir)) {
-      fs.makefileSync(this.options.tmpDir);
+      fs.mkdirSync(this.options.tmpDir);
     }
   }
 
@@ -124,8 +124,8 @@ var Receiver = exports.Receiver = function () {
       for (var i = 0; i < fileInfo.flowTotalChunks; i = i + 1) {
         fileInfo.chunkStates.push('unseen');
       }
-      fileInfo.mimeType = mime.lookup(fileInfo.flowFilename);
-      fileInfo.targetFilename = tokenKey + '.' + mime.extension(fileInfo.mimeType);
+      fileInfo.mimeType = _mime2.default.lookup(fileInfo.flowFilename);
+      fileInfo.targetFilename = tokenKey + '.' + _mime2.default.extension(fileInfo.mimeType);
       this.statusTracker[fileInfo.flowIdentifier] = fileInfo;
     }
   }, {
@@ -133,7 +133,7 @@ var Receiver = exports.Receiver = function () {
     value: function concatAndFinalize(info) {
       var _this3 = this;
 
-      var outFile = fs.createWriteStream(path.resolve(this.options.tmpDir, info.targetFilename), { autoClose: false });
+      var outFile = fs.createWriteStream(path.resolve(this.options.tmpDir, info.targetFilename));
       return info.chunkStates.reduce(function (thenable, chunkFile) {
         return thenable.then(function () {
           return new _bluebird2.default(function (resolve, reject) {
@@ -142,11 +142,11 @@ var Receiver = exports.Receiver = function () {
             chunkStream.on('error', reject);
             chunkStream.pipe(outFile, { end: false });
           }).then(function () {
-            return fs.unlinkSync(_this3.options.tmpDir, outFile);
+            return fs.unlinkSync(path.join(_this3.options.tmpDir, chunkFile));
           });
         });
       }, _bluebird2.default.resolve()).then(function () {
-        outFile.closeSync();
+        outFile.end();
         if (_this3.options.onComplete) {
           return _this3.options.onComplete(info.targetFilename).then(function () {
             return info.targetFilename;
@@ -155,7 +155,7 @@ var Receiver = exports.Receiver = function () {
           return info.targetFilename;
         }
       }).catch(function (err) {
-        outFile.closeSync();
+        outFile.end();
         throw err;
       });
     }

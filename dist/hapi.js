@@ -11,17 +11,18 @@ var Joi = _interopRequireWildcard(_joi);
 
 var _receiver = require('./receiver');
 
-var _deepAssign = require('deepAssign');
+var _deepAssign = require('deep-assign');
 
-var deepAssign = _interopRequireWildcard(_deepAssign);
+var _deepAssign2 = _interopRequireDefault(_deepAssign);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function hapiPlugin(options) {
-  return function plugin(server, _, next) {
-    var receiver = new _receiver.Receiver(options);
-
-    var baseGet = deepAssign({}, {
+  var receiver = new _receiver.Receiver(options);
+  function plugin(server, _, next) {
+    var baseGet = (0, _deepAssign2.default)({}, {
       method: 'GET',
       path: '/upload',
       handler: function handler(request, reply) {
@@ -43,7 +44,7 @@ function hapiPlugin(options) {
       }
     }, options.getOptions || {});
 
-    var basePost = deepAssign({}, {
+    var basePost = (0, _deepAssign2.default)({}, {
       method: 'POST',
       path: '/upload',
       handler: function handler(request, reply) {
@@ -55,12 +56,11 @@ function hapiPlugin(options) {
         payload: {
           maxBytes: 209715200,
           output: 'stream',
-          parse: true,
-          uploads: options.tmpDir
+          parse: true
         },
         validate: {
           payload: {
-            file: Joi.any(),
+            file: Joi.any().required(),
             flowChunkNumber: Joi.number().integer(),
             flowChunkSize: Joi.number().integer(),
             flowTotalSize: Joi.number().integer(),
@@ -76,5 +76,12 @@ function hapiPlugin(options) {
 
     server.route([baseGet, basePost]);
     next();
+  }
+  plugin.attributes = {
+    version: '1.0.0',
+    name: 'flange',
+    receiver: receiver
   };
+
+  return plugin;
 }

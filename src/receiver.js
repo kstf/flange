@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 import * as path from 'path';
-import * as mime from 'mime';
+import mime from 'mime';
 import Bluebird from 'bluebird';
 
 // import { handleError } from './handleError';
@@ -11,7 +11,7 @@ export class Receiver {
     this.options = Object.assign({}, opts);
     this.statusTracker = {};
     if (!fs.existsSync(this.options.tmpDir)) {
-      fs.makefileSync(this.options.tmpDir);
+      fs.mkdirSync(this.options.tmpDir);
     }
   }
 
@@ -89,8 +89,7 @@ export class Receiver {
 
   concatAndFinalize(info) {
     const outFile = fs.createWriteStream(
-      path.resolve(this.options.tmpDir, info.targetFilename),
-      {autoClose: false}
+      path.resolve(this.options.tmpDir, info.targetFilename)
     );
     return info.chunkStates.reduce((thenable, chunkFile) => {
       return thenable.then(() => {
@@ -100,12 +99,12 @@ export class Receiver {
           chunkStream.on('error', reject);
           chunkStream.pipe(outFile, {end: false});
         }).then(() => {
-          return fs.unlinkSync(this.options.tmpDir, outFile);
+          return fs.unlinkSync(path.join(this.options.tmpDir, chunkFile));
         });
       });
     }, Bluebird.resolve())
     .then(() => {
-      outFile.closeSync();
+      outFile.end();
       if (this.options.onComplete) {
         return this.options.onComplete(info.targetFilename)
         .then(() => info.targetFilename);
@@ -114,7 +113,7 @@ export class Receiver {
       }
     })
     .catch((err) => {
-      outFile.closeSync();
+      outFile.end();
       throw err;
     });
   }
