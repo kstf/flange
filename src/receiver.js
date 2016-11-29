@@ -105,7 +105,7 @@ export class Receiver {
       });
     }, Bluebird.resolve())
     .then(() => {
-      outFile.closeSync();
+      fs.closeSync(outFile);
       if (this.options.onComplete) {
         return this.options.onComplete(info.targetFilename)
         .then(() => info.targetFilename);
@@ -114,7 +114,7 @@ export class Receiver {
       }
     })
     .catch((err) => {
-      outFile.closeSync();
+      fs.closeSync(outFile);
       throw err;
     });
   }

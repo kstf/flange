@@ -45,11 +45,10 @@ export function hapiPlugin(options) {
             maxBytes: 209715200,
             output: 'stream',
             parse: true,
-            uploads: options.tmpDir,
           },
           validate: {
             payload: {
-              file: Joi.any(),
+              file: Joi.any().required(),
               flowChunkNumber: Joi.number().integer(),
               flowChunkSize: Joi.number().integer(),
               flowTotalSize: Joi.number().integer(),

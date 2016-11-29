@@ -8,15 +8,31 @@ var _chaiAsPromised = require('chai-as-promised');
 
 var _chaiAsPromised2 = _interopRequireDefault(_chaiAsPromised);
 
-var _bluebird = require('bluebird');
-
-var _bluebird2 = _interopRequireDefault(_bluebird);
-
 var _hapi = require('../hapi');
+
+var _streamToPromise = require('stream-to-promise');
+
+var _streamToPromise2 = _interopRequireDefault(_streamToPromise);
+
+var _stream = require('stream');
+
+var stream = _interopRequireWildcard(_stream);
 
 var _os = require('os');
 
 var os = _interopRequireWildcard(_os);
+
+var _fs = require('fs');
+
+var fs = _interopRequireWildcard(_fs);
+
+var _path = require('path');
+
+var path = _interopRequireWildcard(_path);
+
+var _formData = require('form-data');
+
+var _formData2 = _interopRequireDefault(_formData);
 
 var _hapi2 = require('hapi');
 
@@ -32,6 +48,7 @@ _chai2.default.use(_chaiAsPromised2.default); /* eslint-env node, mocha*/
 var expect = _chai2.default.expect;
 
 var testServer = new Hapi.Server();
+var testFile = fs.readFileSync(path.join(__dirname, 'hapi.test.js'));
 
 var testFlange = (0, _hapi.hapiPlugin)({ tmpDir: os.tmpdir() });
 
@@ -80,7 +97,39 @@ describe('hapiPlugin', function () {
     });
   });
   describe('POST requests', function () {
-    it('accepts file data for valid chunks');
+    it('accepts file data for valid chunks', function () {
+      testFlange.attributes.receiver.initiateUpload({
+        flowChunkSize: testFile.length,
+        flowTotalSize: testFile.length * 3,
+        flowIdentifier: 'testPost.txt',
+        flowFilename: 'testPost.txt',
+        flowCurrentChunkSize: testFile.length,
+        flowTotalChunks: 3,
+        flowRelativePath: '/tmp'
+      });
+      var postRequest = new _formData2.default();
+      postRequest.append('flowChunkNumber', 1);
+      postRequest.append('flowChunkSize', testFile.length);
+      postRequest.append('flowTotalSize', testFile.length * 3);
+      postRequest.append('flowIdentifier', 'testPost.txt');
+      postRequest.append('flowFilename', 'testPost.txt');
+      postRequest.append('flowCurrentChunkSize', testFile.length);
+      postRequest.append('flowTotalChunks', 3);
+      postRequest.append('flowRelativePath', '/tmp');
+      var fileStream = fs.createReadStream(path.join(__dirname, 'hapi.test.js'));
+      postRequest.append('file', fileStream);
+      return expect((0, _streamToPromise2.default)(postRequest).then(function (payload) {
+        return testServer.inject({
+          url: '/flange/upload',
+          method: 'POST',
+          headers: postRequest.getHeaders(),
+          payload: payload
+        });
+      })).to.eventually.have.deep.property('statusCode', 200).then(function () {
+        var outFile = fs.readFileSync(path.join(os.tmpdir(), testFlange.attributes.receiver.statusTracker['testPost.txt'].chunkStates[0]));
+        return expect(outFile.toString()).to.equal(testFile.toString());
+      });
+    });
     it('finalizes and returns 200 on the last chunk');
     it('generates appopriate errors on invalid requests');
   });

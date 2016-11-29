@@ -30,9 +30,11 @@
     "chai-as-promised": "^6.0.0",
     "del": "^2.2.2",
     "eslint": "^3.10.2",
+    "form-data": "^2.1.2",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
-    "gulp-mocha": "^3.0.1"
+    "gulp-mocha": "^3.0.1",
+    "stream-to-promise": "^2.2.0"
   },
   "dependencies": {
     "bluebird": "^3.4.6",

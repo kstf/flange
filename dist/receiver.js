@@ -146,7 +146,7 @@ var Receiver = exports.Receiver = function () {
           });
         });
       }, _bluebird2.default.resolve()).then(function () {
-        outFile.closeSync();
+        fs.closeSync(outFile);
         if (_this3.options.onComplete) {
           return _this3.options.onComplete(info.targetFilename).then(function () {
             return info.targetFilename;
@@ -155,7 +155,7 @@ var Receiver = exports.Receiver = function () {
           return info.targetFilename;
         }
       }).catch(function (err) {
-        outFile.closeSync();
+        fs.closeSync(outFile);
         throw err;
       });
     }
