@@ -9,6 +9,7 @@ import Bluebird from 'bluebird';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
+import rimraf from 'rimraf';
 import FormData from 'form-data';
 chai.use(chaiAsPromised);
 const expect = chai.expect;
@@ -16,8 +17,9 @@ const expect = chai.expect;
 import * as Hapi from 'hapi';
 const testServer = new Hapi.Server();
 const testFile = fs.readFileSync(path.join(__dirname, 'hapi.test.js'));
+const tmpDir = path.join(os.tmpdir(), 'flangeHapiTest');
 
-const testFlange = hapiPlugin({tmpDir: os.tmpdir()});
+const testFlange = hapiPlugin({tmpDir: tmpDir});
 
 
 before(() => {
@@ -33,7 +35,9 @@ before(() => {
 });
 
 after(() => {
-  testServer.stop();
+  return new Bluebird((resolve) => {
+    rimraf(tmpDir, () => resolve());
+  }).then(() => testServer.stop());
 });
 
 describe('hapiPlugin', () => {
@@ -104,7 +108,7 @@ describe('hapiPlugin', () => {
       .to.eventually.have.deep.property('statusCode', 200)
       .then(() => {
         const outFile = fs.readFileSync(path.join(
-          os.tmpdir(),
+          tmpDir,
           testFlange.attributes.receiver.statusTracker['testPost.txt'].chunkStates[0])
         );
         return expect(outFile.toString()).to.equal(testFile.toString());
@@ -167,7 +171,7 @@ describe('hapiPlugin', () => {
       })
       .then(() => {
         const outFile = fs.readFileSync(path.join(
-          os.tmpdir(),
+          tmpDir,
           testFlange.attributes.receiver.statusTracker['testPost2.txt'].targetFilename)
         );
         return expect(outFile.toString()).to.equal(testFile.toString() + testFile.toString());

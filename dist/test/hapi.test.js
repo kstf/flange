@@ -33,6 +33,10 @@ var _path = require('path');
 
 var path = _interopRequireWildcard(_path);
 
+var _rimraf = require('rimraf');
+
+var _rimraf2 = _interopRequireDefault(_rimraf);
+
 var _formData = require('form-data');
 
 var _formData2 = _interopRequireDefault(_formData);
@@ -50,8 +54,9 @@ var expect = _chai2.default.expect;
 
 var testServer = new Hapi.Server();
 var testFile = fs.readFileSync(path.join(__dirname, 'hapi.test.js'));
+var tmpDir = path.join(os.tmpdir(), 'flangeHapiTest');
 
-var testFlange = (0, _hapi.hapiPlugin)({ tmpDir: os.tmpdir() });
+var testFlange = (0, _hapi.hapiPlugin)({ tmpDir: tmpDir });
 
 before(function () {
   testServer.connection({ port: 3000 });
@@ -63,7 +68,13 @@ before(function () {
 });
 
 after(function () {
-  testServer.stop();
+  return new _bluebird2.default(function (resolve) {
+    (0, _rimraf2.default)(tmpDir, function () {
+      return resolve();
+    });
+  }).then(function () {
+    return testServer.stop();
+  });
 });
 
 describe('hapiPlugin', function () {
@@ -127,7 +138,7 @@ describe('hapiPlugin', function () {
           payload: payload
         });
       })).to.eventually.have.deep.property('statusCode', 200).then(function () {
-        var outFile = fs.readFileSync(path.join(os.tmpdir(), testFlange.attributes.receiver.statusTracker['testPost.txt'].chunkStates[0]));
+        var outFile = fs.readFileSync(path.join(tmpDir, testFlange.attributes.receiver.statusTracker['testPost.txt'].chunkStates[0]));
         return expect(outFile.toString()).to.equal(testFile.toString());
       });
     });
@@ -186,7 +197,7 @@ describe('hapiPlugin', function () {
 
         return [expect(r1).to.have.deep.property('statusCode', 200), expect(r2).to.have.deep.property('statusCode', 200)];
       }).then(function () {
-        var outFile = fs.readFileSync(path.join(os.tmpdir(), testFlange.attributes.receiver.statusTracker['testPost2.txt'].targetFilename));
+        var outFile = fs.readFileSync(path.join(tmpDir, testFlange.attributes.receiver.statusTracker['testPost2.txt'].targetFilename));
         return expect(outFile.toString()).to.equal(testFile.toString() + testFile.toString());
       });
     });

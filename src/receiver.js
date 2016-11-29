@@ -11,7 +11,7 @@ export class Receiver {
     this.options = Object.assign({}, opts);
     this.statusTracker = {};
     if (!fs.existsSync(this.options.tmpDir)) {
-      fs.makefileSync(this.options.tmpDir);
+      fs.mkdirSync(this.options.tmpDir);
     }
   }
 

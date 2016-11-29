@@ -44,7 +44,7 @@ var Receiver = exports.Receiver = function () {
     this.options = Object.assign({}, opts);
     this.statusTracker = {};
     if (!fs.existsSync(this.options.tmpDir)) {
-      fs.makefileSync(this.options.tmpDir);
+      fs.mkdirSync(this.options.tmpDir);
     }
   }
 
@@ -133,9 +133,7 @@ var Receiver = exports.Receiver = function () {
     value: function concatAndFinalize(info) {
       var _this3 = this;
 
-      var outFile = fs.createWriteStream(path.resolve(this.options.tmpDir, info.targetFilename)
-      // {autoClose: false}
-      );
+      var outFile = fs.createWriteStream(path.resolve(this.options.tmpDir, info.targetFilename));
       return info.chunkStates.reduce(function (thenable, chunkFile) {
         return thenable.then(function () {
           return new _bluebird2.default(function (resolve, reject) {
