@@ -1,6 +1,6 @@
 {
   "name": "flange",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A node.js server plugin for receiving flow.js uploads",
   "main": "dist/index.js",
   "scripts": {

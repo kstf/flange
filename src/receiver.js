@@ -4,8 +4,6 @@ import * as path from 'path';
 import mime from 'mime';
 import Bluebird from 'bluebird';
 
-// import { handleError } from './handleError';
-
 export class Receiver {
   constructor(opts = {}) {
     this.options = Object.assign({}, opts);
