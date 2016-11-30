@@ -1,7 +1,7 @@
 import { Receiver } from './receiver';
-import { hapiPlugin } from './hapi';
+import * as hapi from './hapi';
 
 export {
-  hapiPlugin,
+  hapi,
   Receiver,
 };
