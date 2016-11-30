@@ -33,8 +33,6 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-// import { handleError } from './handleError';
-
 var Receiver = exports.Receiver = function () {
   function Receiver() {
     var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
